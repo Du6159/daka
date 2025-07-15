@@ -1,0 +1,2924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4A90E2">
+    <meta name="description" content="专业打卡时间记录工具">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>阿卡哇卡</title>
+    <link rel="manifest" href="app.webmanifest">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏱️</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏱️</text></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s ease;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+        
+        header {
+            background: linear-gradient(135deg, #4A90E2 0%, #2c3e50 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .session-info {
+            background: rgba(52, 73, 94, 0.85);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .session-active .session-info {
+            display: block;
+        }
+        
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .session-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #FFD700;
+        }
+        
+        .session-timer {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #3498db;
+            background: rgba(0,0,0,0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(52, 73, 94, 0.7);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+        
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .date-filter input {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .date-filter button {
+            padding: 10px 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .date-filter button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        main {
+            padding: 25px 20px;
+        }
+        
+        .punch-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .punch-btn {
+            flex: 1;
+            padding: 20px 5px;
+            min-width: 80px;
+            max-width: 120px;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .punch-btn:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0));
+            pointer-events: none;
+        }
+        
+        .start-btn {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+        }
+        
+        .record-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            display: none;
+        }
+        
+        .session-active .record-btn {
+            display: flex;
+        }
+        
+        .end-btn {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+            display: none;
+        }
+        
+        .session-active .end-btn {
+            display: flex;
+        }
+        
+        .punch-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        
+        .punch-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .punch-btn i {
+            font-size: 2rem;
+        }
+        
+        .records-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            max-height: 350px;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #eaeaea;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .record-list {
+            list-style: none;
+        }
+        
+        .record-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #3498db;
+            animation: fadeIn 0.3s ease;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .record-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .record-item.end {
+            border-left-color: #27ae60;
+        }
+        
+        .record-item.record {
+            border-left-color: #f39c12;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .record-date {
+            font-weight: bold;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .record-type {
+            background: #eaf2f8;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .record-time {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        .record-duration {
+            background: #eaf2f8;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-top: 8px;
+        }
+        
+        .record-note {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #eee;
+            font-size: 0.95rem;
+            color: #555;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .note-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            margin-top: 5px;
+            width: 100%;
+        }
+        
+        .note-display {
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-top: 5px;
+        }
+        
+        .no-records {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 15px;
+            min-width: 120px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+        
+        .export-btn {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+        
+        .import-btn {
+            background: #3498db;
+            color: white;
+        }
+        
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .install-btn {
+            background: #9b59b6;
+            color: white;
+            display: none;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+        }
+        
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .detail-container {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+        
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .detail-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .close-detail {
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .close-detail:hover {
+            transform: rotate(90deg);
+        }
+        
+        .detail-content {
+            margin-top: 15px;
+        }
+        
+        .detail-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .detail-item-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .detail-item-time {
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .detail-item-type {
+            background: #eaf2f8;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .detail-item-info {
+            margin-top: 10px;
+        }
+        
+        .detail-item-duration {
+            font-weight: 500;
+            color: #27ae60;
+        }
+        
+        .detail-item-note {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff;
+            border-radius: 8px;
+            border-left: 3px solid #3498db;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 15px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .install-banner {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 10px;
+            right: 10px;
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            text-align: center;
+        }
+        
+        .install-banner button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .delete-options {
+            position: absolute;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            padding: 10px;
+            display: none;
+            z-index: 100;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 180px;
+            bottom: 70px;
+            right: 20px;
+        }
+        
+        .delete-option {
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .delete-option:hover {
+            background: #f1f1f1;
+        }
+        
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.25);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+            transition: all 0.3s;
+        }
+        
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: rotate(30deg);
+        }
+        
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .settings-container {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            padding: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+        
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .settings-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .close-settings {
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .close-settings:hover {
+            transform: rotate(90deg);
+        }
+        
+        .settings-content {
+            margin-top: 15px;
+        }
+        
+        .bg-setting {
+            margin-bottom: 20px;
+        }
+        
+        .bg-setting h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .bg-preview {
+            width: 100%;
+            height: 150px;
+            border-radius: 10px;
+            background-size: cover;
+            background-position: center;
+            margin-bottom: 10px;
+            border: 2px dashed #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            overflow: hidden;
+        }
+        
+        .bg-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .bg-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #3498db;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        
+        .bg-actions button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .bg-actions button.reset-bg {
+            background: #e74c3c;
+        }
+        
+        .export-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .export-container {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            padding: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+        
+        .export-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .export-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .close-export {
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .close-export:hover {
+            transform: rotate(90deg);
+        }
+        
+        .export-content {
+            margin-top: 15px;
+        }
+        
+        .date-range {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .date-range input {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+        
+        .export-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .export-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        
+        .export-actions button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .export-confirm {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .note-history {
+            margin-top: 5px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 5px;
+            max-height: 100px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .note-history-item {
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 2px 0;
+            transition: all 0.2s;
+        }
+        
+        .note-history-item:hover {
+            background: #e9ecef;
+        }
+        
+        .record-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .record-actions a {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            color: #3498db;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .record-actions a:hover {
+            color: #2980b9;
+            transform: translateX(3px);
+        }
+        
+        /* 分页控件样式 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 5px;
+        }
+        
+        .pagination-btn {
+            padding: 8px 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .pagination-btn:hover {
+            background: #2980b9;
+        }
+        
+        .pagination-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        /* 加载更多按钮 */
+        .load-more {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .load-more:hover {
+            background: #2980b9;
+        }
+        
+        /* 日期标签样式 */
+        .date-tag {
+            background: #3498db;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-left: 10px;
+        }
+        
+        /* 新增：车牌管理区域样式 */
+        .plates-management {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .plates-management h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .plates-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .plates-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .add-plate-btn {
+            padding: 10px 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+        
+        .add-plate-btn:hover {
+            background: #219653;
+        }
+        
+        .plates-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+        
+        .plate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            transition: all 0.2s;
+        }
+        
+        .plate-item:last-child {
+            border-bottom: none;
+        }
+        
+        .plate-item:hover {
+            background: #e9f7fe;
+        }
+        
+        .plate-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .plate-edit-btn, .plate-delete-btn {
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .plate-edit-btn {
+            background: #3498db;
+            color: white;
+        }
+        
+        .plate-delete-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .plate-edit-btn:hover, .plate-delete-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        /* 修复：车辆里程记录区域样式 */
+        .mileage-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #eaeaea;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .mileage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
+        .mileage-header h2 {
+            font-size: 1.3rem;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+        }
+        
+        .toggle-icon {
+            transition: transform 0.3s;
+        }
+        
+        .mileage-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .mileage-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .mileage-input-group label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .mileage-input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+        }
+        
+        .mileage-input:read-only {
+            background-color: #f5f5f5;
+            color: #777;
+        }
+        
+        .mileage-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .mileage-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .add-mileage-btn {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .add-mileage-btn:hover {
+            background: #219653;
+        }
+        
+        .mileage-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+            display: none;
+        }
+        
+        .mileage-list.visible {
+            display: block;
+        }
+        
+        .mileage-item {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            border-left: 4px solid #3498db;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .mileage-item-header {
+            grid-column: span 2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #eee;
+            margin-bottom: 8px;
+        }
+        
+        .mileage-plate {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .mileage-time {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+        
+        .mileage-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+        
+        .mileage-value {
+            font-weight: 500;
+        }
+        
+        .no-mileage {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .toggle-history-btn {
+            background: #9b59b6;
+            color: white;
+        }
+        
+        .toggle-history-btn:hover {
+            background: #8e44ad;
+        }
+        
+        /* 修复：折叠状态样式 */
+        .mileage-container.collapsed .mileage-details {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+        }
+        
+        .mileage-container.expanded .mileage-details {
+            max-height: 500px; /* 足够容纳内容的高度 */
+            opacity: 1;
+            overflow: visible;
+            padding: 0;
+            margin: 0;
+            transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease;
+        }
+        
+        .mileage-container.collapsed .mileage-toggle-icon i {
+            transform: rotate(0deg);
+            transition: transform 0.3s ease;
+        }
+        
+        .mileage-container.expanded .mileage-toggle-icon i {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+        
+        /* 修复：确保车牌号码输入框在折叠状态下不显示 */
+        .mileage-container.collapsed .mileage-form,
+        .mileage-container.collapsed .mileage-actions {
+            display: none;
+        }
+        
+        .mileage-container.expanded .mileage-form,
+        .mileage-container.expanded .mileage-actions {
+            display: grid;
+        }
+        
+        /* 修复：历史记录列表在折叠状态下隐藏 */
+        .mileage-container.collapsed .mileage-list {
+            display: none !important;
+        }
+        
+        @media (max-width: 768px) {
+            .mileage-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .mileage-input-group:first-child {
+                grid-column: span 1;
+            }
+            
+            .mileage-item {
+                grid-template-columns: 1fr;
+            }
+            
+            .mileage-item-header {
+                grid-column: span 1;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                border-radius: 15px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .punch-btn {
+                padding: 15px;
+                font-size: 1rem;
+                min-width: 80px;
+            }
+            
+            .punch-btn i {
+                font-size: 1.5rem;
+            }
+            
+            .record-time {
+                font-size: 1rem;
+            }
+            
+            .action-btn {
+                min-width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .settings-btn {
+                top: 15px;
+                left: 15px;
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+            
+            .record-actions {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .record-actions a {
+                font-size: 0.85rem;
+                padding: 5px 8px;
+                background: rgba(52, 152, 219, 0.1);
+                border-radius: 6px;
+            }
+        }
+        
+        @media (max-width: 380px) {
+            .record-actions {
+                gap: 8px;
+            }
+            
+            .record-actions a {
+                font-size: 0.8rem;
+                padding: 4px 6px;
+            }
+            
+            .record-actions a i {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="appContainer">
+        <button class="settings-btn" id="settingsButton">
+            <i class="fas fa-cog"></i>
+        </button>
+        
+        <div class="install-banner" id="installBanner">
+            <p>将此应用安装到主屏幕以获得更好的体验</p>
+            <button id="installButton">安装应用</button>
+            <button id="dismissBanner" style="background: #e74c3c; margin-left: 10px;">稍后再说</button>
+        </div>
+        
+        <header>
+            <h1><i class="fas fa-clock"></i> 阿卡哇卡</h1>
+            
+            <div class="session-info" id="sessionInfo">
+                <div class="session-header">
+                    <div class="session-title"><i class="fas fa-running"></i> 当前打卡会话</div>
+                    <div class="session-timer" id="sessionTimer">00:00:00</div>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="recordCount">0</div>
+                        <div class="stat-label">记录点</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="sessionDuration">0s</div>
+                        <div class="stat-label">持续时间</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="date-filter">
+                <input type="date" id="dateFilter" value="">
+                <button id="filterButton"><i class="fas fa-filter"></i> 筛选</button>
+                <button id="resetButton"><i class="fas fa-sync"></i> 重置</button>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalSessions">0</div>
+                    <div class="stat-label">总会话</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="todayRecords">0</div>
+                    <div class="stat-label">今日记录</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalRecords">0</div>
+                    <div class="stat-label">总记录</div>
+                </div>
+            </div>
+        </header>
+        
+        <main>
+            <!-- 打卡按钮区域 -->
+            <div class="punch-container" id="punchContainer">
+                <button class="punch-btn start-btn" id="startButton">
+                    <i class="fas fa-play-circle"></i>
+                    <span>开始</span>
+                </button>
+                <button class="punch-btn record-btn" id="recordButton">
+                    <i class="fas fa-flag"></i>
+                    <span>记录</span>
+                </button>
+                <button class="punch-btn end-btn" id="endButton">
+                    <i class="fas fa-stop-circle"></i>
+                    <span>结束</span>
+                </button>
+            </div>
+            
+            <!-- 车辆里程记录区域 -->
+            <div class="mileage-container collapsed" id="mileageContainer">
+                <div class="mileage-header" id="mileageHeader">
+                    <h2><i class="fas fa-car"></i> 车辆里程记录</h2>
+                    <div class="toggle-icon" id="mileageToggleIcon">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                
+                <div class="mileage-details">
+                    <div class="mileage-form">
+                        <div class="mileage-input-group">
+                            <label for="plateNumber">车牌号码</label>
+                            <input type="text" id="plateNumber" class="mileage-input" placeholder="请输入车牌号" maxlength="10" list="plateList">
+                            <datalist id="plateList"></datalist>
+                        </div>
+                        
+                        <div class="mileage-input-group">
+                            <label for="startMileage">开始里程 (km)</label>
+                            <input type="number" id="startMileage" class="mileage-input" placeholder="开始里程" min="0" step="0.1">
+                        </div>
+                        
+                        <div class="mileage-input-group">
+                            <label for="endMileage">结束里程 (km)</label>
+                            <input type="number" id="endMileage" class="mileage-input" placeholder="结束里程" min="0" step="0.1">
+                        </div>
+                        
+                        <div class="mileage-input-group">
+                            <label for="calculatedMileage">行驶里程 (km)</label>
+                            <input type="number" id="calculatedMileage" class="mileage-input" placeholder="自动计算" readonly>
+                        </div>
+                    </div>
+                    
+                    <div class="mileage-actions">
+                        <button class="mileage-btn add-mileage-btn" id="addMileageBtn">
+                            <i class="fas fa-plus"></i> 新增记录
+                        </button>
+                        
+                        <button class="mileage-btn toggle-history-btn" id="toggleHistoryBtn">
+                            <i class="fas fa-history"></i> 查看历史记录
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="mileage-list" id="mileageList">
+                    <div class="no-mileage">暂无里程记录<br>请添加新的里程记录</div>
+                </div>
+            </div>
+            
+            <div class="records-container">
+                <h2 class="section-title"><i class="fas fa-history"></i> 打卡记录
+                    <span class="date-tag" id="currentDateTag"></span>
+                </h2>
+                <ul class="record-list" id="recordList">
+                    <li class="no-records">暂无打卡记录<br>点击"开始"按钮开始新会话</li>
+                </ul>
+                <button class="load-more" id="loadMoreBtn" style="display: none;">加载更多记录</button>
+            </div>
+            
+            <div class="actions">
+                <button class="action-btn export-btn" id="exportButton">
+                    <i class="fas fa-file-export"></i> 导出
+                </button>
+                <button class="action-btn import-btn" id="importButton">
+                    <i class="fas fa-file-import"></i> 导入
+                </button>
+                <button class="action-btn delete-btn" id="deleteButton">
+                    <i class="fas fa-trash-alt"></i> 删除
+                </button>
+                <button class="action-btn install-btn" id="pwaInstallButton">
+                    <i class="fas fa-download"></i> 安装应用
+                </button>
+                
+                <div class="delete-options" id="deleteOptions">
+                    <div class="delete-option" data-action="current">
+                        <i class="fas fa-minus-circle"></i> 删除当前记录点
+                    </div>
+                    <div class="delete-option" data-action="session">
+                        <i class="fas fa-trash"></i> 删除当前会话
+                    </div>
+                    <div class="delete-option" data-action="all">
+                        <i class="fas fa-broom"></i> 删除所有记录
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>数据保存在本地浏览器中</p>
+        </footer>
+    </div>
+    
+    <div class="detail-modal" id="detailModal">
+        <div class="detail-container" id="detailContainer">
+            <div class="detail-header">
+                <h2 class="detail-title">打卡记录详情</h2>
+                <div class="close-detail" id="closeDetail">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="detail-content" id="detailContent">
+                <!-- 详情内容将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-container">
+            <div class="settings-header">
+                <h2 class="settings-title">设置</h2>
+                <div class="close-settings" id="closeSettings">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="settings-content">
+                <div class="bg-setting">
+                    <h3><i class="fas fa-image"></i> 背景设置</h3>
+                    <div class="bg-preview" id="bgPreview">
+                        当前背景预览
+                    </div>
+                    <div class="bg-actions">
+                        <button id="changeBgBtn">
+                            <i class="fas fa-upload"></i> 更换背景
+                        </button>
+                        <button class="reset-bg" id="resetBgBtn">
+                            <i class="fas fa-undo"></i> 重置背景
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 车牌管理区域 -->
+                <div class="plates-management">
+                    <h3><i class="fas fa-car"></i> 车牌管理</h3>
+                    <div class="plates-form">
+                        <input type="text" id="plateInput" class="plates-input" placeholder="输入车牌号">
+                        <button class="add-plate-btn" id="addPlateBtn">
+                            <i class="fas fa-plus"></i> 添加
+                        </button>
+                    </div>
+                    <div class="plates-list" id="platesList">
+                        <div class="no-records">暂无车牌记录</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="export-modal" id="exportModal">
+        <div class="export-container">
+            <div class="export-header">
+                <h2 class="export-title">导出打卡记录</h2>
+                <div class="close-export" id="closeExport">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="export-content">
+                <div class="date-range">
+                    <label for="exportStartDate">开始日期:</label>
+                    <input type="date" id="exportStartDate">
+                    <label for="exportEndDate">结束日期:</label>
+                    <input type="date" id="exportEndDate">
+                </div>
+                <div class="export-actions">
+                    <button class="export-confirm" id="exportConfirmBtn">
+                        <i class="fas fa-file-excel"></i> 导出为Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" style="display: none;" accept=".json">
+    <input type="file" id="bgImageInput" style="display: none;" accept="image/*">
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const startButton = document.getElementById('startButton');
+            const recordButton = document.getElementById('recordButton');
+            const endButton = document.getElementById('endButton');
+            const recordList = document.getElementById('recordList');
+            const exportButton = document.getElementById('exportButton');
+            const importButton = document.getElementById('importButton');
+            const deleteButton = document.getElementById('deleteButton');
+            const deleteOptions = document.getElementById('deleteOptions');
+            const filterButton = document.getElementById('filterButton');
+            const resetButton = document.getElementById('resetButton');
+            const dateFilter = document.getElementById('dateFilter');
+            const sessionTimer = document.getElementById('sessionTimer');
+            const punchContainer = document.getElementById('punchContainer');
+            const sessionInfo = document.getElementById('sessionInfo');
+            const totalSessions = document.getElementById('totalSessions');
+            const todayRecords = document.getElementById('todayRecords');
+            const totalRecords = document.getElementById('totalRecords');
+            const recordCount = document.getElementById('recordCount');
+            const sessionDuration = document.getElementById('sessionDuration');
+            const detailModal = document.getElementById('detailModal');
+            const detailContent = document.getElementById('detailContent');
+            const closeDetail = document.getElementById('closeDetail');
+            const appContainer = document.getElementById('appContainer');
+            const fileInput = document.getElementById('fileInput');
+            const pwaInstallButton = document.getElementById('pwaInstallButton');
+            const installBanner = document.getElementById('installBanner');
+            const installButton = document.getElementById('installButton');
+            const dismissBanner = document.getElementById('dismissBanner');
+            const settingsButton = document.getElementById('settingsButton');
+            const settingsModal = document.getElementById('settingsModal');
+            const closeSettings = document.getElementById('closeSettings');
+            const bgImageInput = document.getElementById('bgImageInput');
+            const changeBgBtn = document.getElementById('changeBgBtn');
+            const resetBgBtn = document.getElementById('resetBgBtn');
+            const bgPreview = document.getElementById('bgPreview');
+            const exportModal = document.getElementById('exportModal');
+            const closeExport = document.getElementById('closeExport');
+            const exportStartDate = document.getElementById('exportStartDate');
+            const exportEndDate = document.getElementById('exportEndDate');
+            const exportConfirmBtn = document.getElementById('exportConfirmBtn');
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            const currentDateTag = document.getElementById('currentDateTag');
+            
+            // 新增：里程记录相关DOM元素
+            const plateNumberInput = document.getElementById('plateNumber');
+            const startMileageInput = document.getElementById('startMileage');
+            const endMileageInput = document.getElementById('endMileage');
+            const calculatedMileageInput = document.getElementById('calculatedMileage');
+            const addMileageBtn = document.getElementById('addMileageBtn');
+            const mileageList = document.getElementById('mileageList');
+            const toggleHistoryBtn = document.getElementById('toggleHistoryBtn');
+            const mileageHeader = document.getElementById('mileageHeader');
+            const mileageToggleIcon = document.getElementById('mileageToggleIcon');
+            const mileageContainer = document.getElementById('mileageContainer');
+            
+            // 新增：车牌管理相关DOM元素
+            const plateInput = document.getElementById('plateInput');
+            const addPlateBtn = document.getElementById('addPlateBtn');
+            const platesList = document.getElementById('platesList');
+            const plateList = document.getElementById('plateList');
+
+            // 初始化数据
+            let sessions = JSON.parse(localStorage.getItem('timeSessions')) || {};
+            let currentSession = JSON.parse(localStorage.getItem('currentSession')) || null;
+            let selectedDate = null;
+            let timerInterval = null;
+            let deferredPrompt = null;
+            let noteHistory = JSON.parse(localStorage.getItem('noteHistory')) || [];
+            let currentPage = 1;
+            const recordsPerPage = 5;
+            
+            // 初始化里程记录数据
+            let mileageRecords = JSON.parse(localStorage.getItem('mileageRecords')) || {};
+            
+            // 初始化车牌数据
+            let licensePlates = JSON.parse(localStorage.getItem('licensePlates')) || [];
+            
+            // 初始化日期选择器
+            const today = new Date();
+            const todayStr = formatDate(today);
+            dateFilter.value = todayStr;
+            currentDateTag.textContent = todayStr;
+            
+            // 初始化导出日期
+            exportStartDate.value = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+            exportEndDate.value = today.toISOString().split('T')[0];
+            
+            // 初始化背景设置
+            initializeBackground();
+            
+            // 初始化显示
+            initializeApp();
+            updatePlatesDisplay();
+            
+            // 检查PWA安装状态
+            checkPWAInstallable();
+            
+            // 应用初始化
+            function initializeApp() {
+                // 如果存在未完成的会话，恢复会话状态
+                if (currentSession) {
+                    punchContainer.classList.add('session-active');
+                    startTimer();
+                    updateSessionStats();
+                }
+                
+                // 默认显示当天的记录
+                selectedDate = todayStr;
+                updateRecordsDisplay();
+                updateStats();
+            }
+            
+            // 初始化背景设置
+            function initializeBackground() {
+                const savedBg = localStorage.getItem('backgroundImage');
+                if (savedBg) {
+                    document.body.style.backgroundImage = `url(${savedBg})`;
+                    bgPreview.style.backgroundImage = `url(${savedBg})`;
+                    bgPreview.textContent = '';
+                }
+            }
+            
+            // 开始打卡按钮事件
+            startButton.addEventListener('click', function() {
+                if (currentSession) {
+                    alert('请先结束当前打卡会话');
+                    return;
+                }
+                
+                const now = new Date();
+                currentSession = {
+                    id: Date.now(),
+                    startTime: now.toISOString(),
+                    displayStart: formatTime(now),
+                    startTimestamp: now.getTime(),
+                    records: [],
+                    endTime: null,
+                    displayEnd: null,
+                    endTimestamp: null,
+                    date: formatDate(now),
+                    title: `会话#${Date.now().toString().slice(-4)}` // 默认标题
+                };
+                
+                // 添加开始记录
+                currentSession.records.push({
+                    id: currentSession.id,
+                    time: now.toISOString(),
+                    displayTime: formatTime(now),
+                    timestamp: now.getTime(),
+                    type: 'start',
+                    interval: '开始',
+                    note: ''
+                });
+                
+                // 保存到localStorage
+                saveSession();
+                
+                // 激活会话状态
+                punchContainer.classList.add('session-active');
+                
+                // 启动计时器
+                startTimer();
+                
+                // 更新显示
+                updateSessionStats();
+                updateStats();
+                updateRecordsDisplay();
+            });
+            
+            // 打卡记录按钮事件
+            recordButton.addEventListener('click', function() {
+                if (!currentSession) {
+                    alert('没有进行中的打卡会话');
+                    return;
+                }
+                
+                const now = new Date();
+                const lastRecord = currentSession.records[currentSession.records.length - 1];
+                const interval = formatDuration(now.getTime() - lastRecord.timestamp, true);
+                
+                const record = {
+                    id: Date.now(),
+                    time: now.toISOString(),
+                    displayTime: formatTime(now),
+                    timestamp: now.getTime(),
+                    type: 'record',
+                    interval: `+${interval}`,
+                    note: ''
+                };
+                
+                // 添加到当前会话
+                currentSession.records.push(record);
+                
+                // 保存到localStorage
+                saveSession();
+                
+                // 更新显示
+                updateSessionStats();
+                updateRecordsDisplay();
+            });
+            
+            // 结束打卡按钮事件
+            endButton.addEventListener('click', function() {
+                if (!currentSession) {
+                    alert('没有进行中的打卡会话');
+                    return;
+                }
+                
+                const now = new Date();
+                const lastRecord = currentSession.records[currentSession.records.length - 1];
+                const interval = formatDuration(now.getTime() - lastRecord.timestamp, true);
+                
+                const endRecord = {
+                    id: Date.now(),
+                    time: now.toISOString(),
+                    displayTime: formatTime(now),
+                    timestamp: now.getTime(),
+                    type: 'end',
+                    interval: `+${interval}`,
+                    note: ''
+                };
+                
+                // 添加到当前会话
+                currentSession.records.push(endRecord);
+                
+                // 设置会话结束时间
+                currentSession.endTime = now.toISOString();
+                currentSession.displayEnd = formatTime(now);
+                currentSession.endTimestamp = now.getTime();
+                
+                // 计算总持续时间
+                currentSession.totalDuration = formatDuration(now.getTime() - currentSession.startTimestamp);
+                
+                // 保存会话到历史
+                const sessionDate = currentSession.date;
+                if (!sessions[sessionDate]) {
+                    sessions[sessionDate] = [];
+                }
+                sessions[sessionDate].unshift(currentSession); // 添加到数组开头，确保最新会话在最前面
+                localStorage.setItem('timeSessions', JSON.stringify(sessions));
+                
+                // 清除当前会话
+                localStorage.removeItem('currentSession');
+                currentSession = null;
+                
+                // 保存到localStorage
+                saveSession();
+                
+                // 停止计时器
+                stopTimer();
+                
+                // 取消会话状态
+                punchContainer.classList.remove('session-active');
+                
+                // 更新显示
+                updateRecordsDisplay();
+                updateStats();
+            });
+            
+            // 保存当前会话到localStorage
+            function saveSession() {
+                localStorage.setItem('currentSession', JSON.stringify(currentSession));
+            }
+            
+            // 启动计时器
+            function startTimer() {
+                clearInterval(timerInterval);
+                const startTime = Date.now();
+                
+                timerInterval = setInterval(() => {
+                    if (!currentSession) return;
+                    
+                    const elapsed = Date.now() - startTime;
+                    sessionTimer.textContent = formatDuration(elapsed, true);
+                    
+                    // 更新会话持续时间
+                    const sessionTime = Date.now() - currentSession.startTimestamp;
+                    sessionDuration.textContent = formatDuration(sessionTime, true);
+                }, 1000);
+            }
+            
+            // 停止计时器
+            function stopTimer() {
+                clearInterval(timerInterval);
+                sessionTimer.textContent = '00:00:00';
+            }
+            
+            // 筛选按钮事件
+            filterButton.addEventListener('click', function() {
+                selectedDate = dateFilter.value;
+                currentDateTag.textContent = selectedDate;
+                currentPage = 1;
+                updateRecordsDisplay();
+                updateMileageDisplay();
+            });
+            
+            // 重置按钮事件
+            resetButton.addEventListener('click', function() {
+                selectedDate = todayStr;
+                dateFilter.value = selectedDate;
+                currentDateTag.textContent = selectedDate;
+                currentPage = 1;
+                updateRecordsDisplay();
+                updateMileageDisplay();
+            });
+            
+            // 导出按钮事件
+            exportButton.addEventListener('click', function() {
+                exportModal.style.display = 'flex';
+            });
+            
+            // 关闭导出模态框
+            closeExport.addEventListener('click', function() {
+                exportModal.style.display = 'none';
+            });
+            
+            // 导出确认按钮事件
+            exportConfirmBtn.addEventListener('click', function() {
+                const startDate = new Date(exportStartDate.value);
+                const endDate = new Date(exportEndDate.value);
+                endDate.setDate(endDate.getDate() + 1); // 包括结束日期当天
+                
+                // 收集要导出的会话（包括当前会话）
+                let exportSessions = [];
+                
+                // 遍历所有日期的会话
+                for (const date in sessions) {
+                    if (sessions.hasOwnProperty(date)) {
+                        const dateObj = new Date(date);
+                        if (dateObj >= startDate && dateObj < endDate) {
+                            exportSessions = exportSessions.concat(sessions[date]);
+                        }
+                    }
+                }
+                
+                // 如果当前会话在日期范围内，也包含进去
+                if (currentSession) {
+                    const sessionDate = new Date(currentSession.date);
+                    if (sessionDate >= startDate && sessionDate < endDate) {
+                        exportSessions.unshift(currentSession);
+                    }
+                }
+                
+                if (exportSessions.length === 0) {
+                    alert('在选定日期范围内没有打卡记录');
+                    return;
+                }
+                
+                // 生成Excel文件
+                generateExcel(exportSessions);
+            });
+            
+            // 生成Excel文件
+            function generateExcel(sessions) {
+                // 创建工作簿
+                const wb = XLSX.utils.book_new();
+                
+                // 准备数据
+                const excelData = [];
+                
+                // 添加标题行
+                excelData.push([
+                    '会话ID', '会话标题', '开始时间', '结束时间', 
+                    '持续时间', '记录点数', '日期', '备注'
+                ]);
+                
+                // 添加会话数据
+                sessions.forEach(session => {
+                    excelData.push([
+                        session.id,
+                        session.title || `会话#${session.id.toString().slice(-4)}`,
+                        session.displayStart,
+                        session.displayEnd || '进行中',
+                        session.totalDuration || formatDuration(Date.now() - session.startTimestamp),
+                        session.records.length,
+                        session.date,
+                        ''
+                    ]);
+                    
+                    // 添加记录点数据
+                    session.records.forEach((record, index) => {
+                        excelData.push([
+                            '',
+                            `记录点 ${index + 1}`,
+                            record.displayTime,
+                            '',
+                            record.interval,
+                            record.type === 'start' ? '开始' : 
+                            record.type === 'end' ? '结束' : '记录点',
+                            formatDate(new Date(record.time)),
+                            record.note || ''
+                        ]);
+                    });
+                    
+                    // 添加空行分隔会话
+                    excelData.push([]);
+                });
+                
+                // 创建工作表
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                
+                // 将工作表添加到工作簿
+                XLSX.utils.book_append_sheet(wb, ws, '打卡记录');
+                
+                // 添加里程记录工作表（如果存在）
+                const currentDate = selectedDate;
+                const mileageData = mileageRecords[currentDate] || [];
+                
+                if (mileageData.length > 0) {
+                    const mileageExcelData = [
+                        ['车牌号码', '开始里程(km)', '结束里程(km)', '行驶里程(km)', '记录时间', '日期']
+                    ];
+                    
+                    mileageData.forEach(record => {
+                        mileageExcelData.push([
+                            record.plateNumber,
+                            record.startMileage,
+                            record.endMileage,
+                            record.mileage,
+                            record.time,
+                            record.date
+                        ]);
+                    });
+                    
+                    const wsMileage = XLSX.utils.aoa_to_sheet(mileageExcelData);
+                    XLSX.utils.book_append_sheet(wb, wsMileage, '里程记录');
+                }
+                
+                // 生成Excel文件并下载
+                const fileName = `打卡记录_${formatDate(new Date())}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+                
+                // 关闭导出模态框
+                exportModal.style.display = 'none';
+            }
+            
+            // 导入按钮事件
+            importButton.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // 文件选择事件
+            fileInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        if (confirm('导入数据将覆盖当前所有记录，确定继续吗？')) {
+                            sessions = data.sessions || {};
+                            currentSession = data.currentSession || null;
+                            
+                            // 保存数据
+                            saveSession();
+                            localStorage.setItem('timeSessions', JSON.stringify(sessions));
+                            
+                            // 重置文件输入
+                            fileInput.value = '';
+                            
+                            // 更新显示
+                            initializeApp();
+                            
+                            alert('数据导入成功！');
+                        }
+                    } catch (error) {
+                        alert('文件格式错误，导入失败！');
+                        console.error('导入错误:', error);
+                    }
+                };
+                reader.readAsText(file);
+            });
+            
+            // 删除按钮事件
+            deleteButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                deleteOptions.style.display = 'flex';
+            });
+            
+            // 删除选项事件
+            document.querySelectorAll('.delete-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const action = this.dataset.action;
+                    deleteOptions.style.display = 'none';
+                    
+                    switch(action) {
+                        case 'current':
+                            deleteCurrentRecord();
+                            break;
+                        case 'session':
+                            deleteCurrentSession();
+                            break;
+                        case 'all':
+                            deleteAllRecords();
+                            break;
+                    }
+                });
+            });
+            
+            // 点击其他地方关闭删除选项
+            document.addEventListener('click', function(e) {
+                if (!deleteButton.contains(e.target) && !deleteOptions.contains(e.target)) {
+                    deleteOptions.style.display = 'none';
+                }
+            });
+            
+            // 删除当前记录点
+            function deleteCurrentRecord() {
+                if (!currentSession || currentSession.records.length <= 1) {
+                    alert('没有可删除的记录点');
+                    return;
+                }
+                
+                if (confirm('确定要删除当前会话的最后一个记录点吗？')) {
+                    currentSession.records.pop(); // 删除最后一个记录点
+                    
+                    // 如果是删除开始记录点，则结束会话
+                    if (currentSession.records.length === 0) {
+                        punchContainer.classList.remove('session-active');
+                        currentSession = null;
+                        stopTimer();
+                    }
+                    
+                    saveSession();
+                    updateRecordsDisplay();
+                    updateSessionStats();
+                    updateStats();
+                }
+            }
+            
+            // 删除当前会话
+            function deleteCurrentSession() {
+                if (!currentSession) {
+                    alert('没有进行中的会话');
+                    return;
+                }
+                
+                if (confirm('确定要删除当前会话吗？')) {
+                    punchContainer.classList.remove('session-active');
+                    currentSession = null;
+                    localStorage.removeItem('currentSession');
+                    stopTimer();
+                    updateRecordsDisplay();
+                    updateStats();
+                }
+            }
+            
+            // 删除所有记录
+            function deleteAllRecords() {
+                if (Object.keys(sessions).length === 0 && !currentSession) {
+                    return;
+                }
+                
+                if (confirm('确定要删除所有打卡记录吗？此操作不可撤销！')) {
+                    sessions = {};
+                    currentSession = null;
+                    localStorage.removeItem('timeSessions');
+                    localStorage.removeItem('currentSession');
+                    punchContainer.classList.remove('session-active');
+                    stopTimer();
+                    updateRecordsDisplay();
+                    updateStats();
+                }
+            }
+            
+            // 关闭详情事件
+            closeDetail.addEventListener('click', function() {
+                detailModal.style.display = 'none';
+            });
+            
+            // 设置按钮事件
+            settingsButton.addEventListener('click', function() {
+                settingsModal.style.display = 'flex';
+            });
+            
+            // 关闭设置事件
+            closeSettings.addEventListener('click', function() {
+                settingsModal.style.display = 'none';
+            });
+            
+            // 更换背景按钮事件
+            changeBgBtn.addEventListener('click', function() {
+                bgImageInput.click();
+            });
+            
+            // 背景图片选择事件
+            bgImageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const imageUrl = event.target.result;
+                    
+                    // 应用新背景
+                    document.body.style.backgroundImage = `url(${imageUrl})`;
+                    bgPreview.style.backgroundImage = `url(${imageUrl})`;
+                    bgPreview.textContent = '';
+                    
+                    // 保存到localStorage
+                    localStorage.setItem('backgroundImage', imageUrl);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            // 重置背景按钮事件
+            resetBgBtn.addEventListener('click', function() {
+                document.body.style.backgroundImage = '';
+                bgPreview.style.backgroundImage = '';
+                bgPreview.textContent = '当前背景预览';
+                localStorage.removeItem('backgroundImage');
+            });
+            
+            // 更新会话统计
+            function updateSessionStats() {
+                if (!currentSession) return;
+                
+                recordCount.textContent = currentSession.records.length;
+                
+                // 更新会话持续时间
+                const sessionTime = Date.now() - currentSession.startTimestamp;
+                sessionDuration.textContent = formatDuration(sessionTime, true);
+            }
+            
+            // 保存备注到历史记录
+            function saveNoteToHistory(note) {
+                if (!note) return;
+                
+                // 去重
+                if (!noteHistory.includes(note)) {
+                    noteHistory.unshift(note);
+                    
+                    // 限制历史记录数量
+                    if (noteHistory.length > 10) {
+                        noteHistory = noteHistory.slice(0, 10);
+                    }
+                    
+                    // 保存到localStorage
+                    localStorage.setItem('noteHistory', JSON.stringify(noteHistory));
+                }
+            }
+            
+            // 更新记录显示
+            function updateRecordsDisplay() {
+                // 清空记录列表
+                recordList.innerHTML = '';
+                
+                // 显示当前会话的记录（如果有）并且日期匹配
+                if (currentSession && currentSession.date === selectedDate) {
+                    const sessionHeader = document.createElement('div');
+                    sessionHeader.className = 'section-title';
+                    sessionHeader.innerHTML = `<i class="fas fa-running"></i> 当前会话 (${currentSession.displayStart})`;
+                    recordList.appendChild(sessionHeader);
+                    
+                    // 倒序显示当前会话的记录（最新记录在最上面）
+                    [...currentSession.records].reverse().forEach(record => {
+                        const item = createRecordItem(record, true);
+                        if (record.type === 'record') item.classList.add('record');
+                        recordList.appendChild(item);
+                    });
+                }
+                
+                // 获取当前日期下的所有会话
+                const dateSessions = sessions[selectedDate] || [];
+                
+                if (dateSessions.length === 0 && (!currentSession || currentSession.date !== selectedDate)) {
+                    if (recordList.children.length === 0) {
+                        recordList.innerHTML = '<li class="no-records">没有找到打卡记录</li>';
+                    }
+                    loadMoreBtn.style.display = 'none';
+                    return;
+                }
+                
+                // 计算要显示的会话数量
+                const startIndex = (currentPage - 1) * recordsPerPage;
+                const endIndex = startIndex + recordsPerPage;
+                const sessionsToShow = dateSessions.slice(startIndex, endIndex);
+                
+                // 添加该日期的会话（保持倒序显示，最新的在最前面）
+                sessionsToShow.forEach(session => {
+                    const sessionDiv = document.createElement('div');
+                    sessionDiv.className = 'record-item';
+                    sessionDiv.dataset.sessionId = session.id;
+                    
+                    sessionDiv.innerHTML = `
+                        <div class="record-header">
+                            <div class="record-date">
+                                <i class="fas fa-project-diagram"></i> 
+                                ${session.title || `会话 #${session.id.toString().slice(-4)}`}
+                            </div>
+                            <div class="record-type">${session.endTime ? '已完成' : '已中断'}</div>
+                        </div>
+                        <div class="record-time">
+                            <i class="far fa-clock"></i> 开始: ${session.displayStart} ${session.endTime ? `| 结束: ${session.displayEnd}` : ''}
+                        </div>
+                        <div class="record-duration">
+                            <i class="fas fa-hourglass-half"></i> 持续时间: ${session.endTime ? 
+                                formatDuration(session.endTimestamp - session.startTimestamp) : 
+                                '未完成'} | 
+                            <i class="fas fa-list"></i> 记录点数: ${session.records.length}
+                        </div>
+                        <div class="record-actions">
+                            <a href="#" class="view-detail">
+                                <i class="fas fa-search"></i> 查看详情
+                            </a>
+                            <a href="#" class="edit-title">
+                                <i class="fas fa-edit"></i> 编辑标题
+                            </a>
+                        </div>
+                    `;
+                    
+                    // 添加点击事件查看详情
+                    const viewDetail = sessionDiv.querySelector('.view-detail');
+                    viewDetail.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        showSessionDetail(session);
+                    });
+                    
+                    // 添加编辑标题事件
+                    const editTitle = sessionDiv.querySelector('.edit-title');
+                    editTitle.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        editSessionTitle(session);
+                    });
+                    
+                    recordList.appendChild(sessionDiv);
+                });
+                
+                // 显示加载更多按钮
+                if (dateSessions.length > endIndex) {
+                    loadMoreBtn.style.display = 'block';
+                    loadMoreBtn.onclick = function() {
+                        currentPage++;
+                        updateRecordsDisplay();
+                    };
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+            }
+            
+            // 编辑会话标题
+            function editSessionTitle(session) {
+                const newTitle = prompt('请输入新的会话标题:', session.title || `会话 #${session.id.toString().slice(-4)}`);
+                if (newTitle !== null) {
+                    session.title = newTitle;
+                    
+                    // 更新当前会话标题（如果是当前会话）
+                    if (currentSession && currentSession.id === session.id) {
+                        currentSession.title = newTitle;
+                    }
+                    
+                    // 更新存储
+                    if (sessions[session.date]) {
+                        const sessionIndex = sessions[session.date].findIndex(s => s.id === session.id);
+                        if (sessionIndex !== -1) {
+                            sessions[session.date][sessionIndex].title = newTitle;
+                            localStorage.setItem('timeSessions', JSON.stringify(sessions));
+                        }
+                    }
+                    
+                    updateRecordsDisplay();
+                }
+            }
+            
+            // 创建记录项
+            function createRecordItem(record, isCurrent = false) {
+                const li = document.createElement('li');
+                li.className = 'record-item';
+                if (record.type === 'end') {
+                    li.classList.add('end');
+                }
+                
+                const recordHeader = document.createElement('div');
+                recordHeader.className = 'record-header';
+                
+                const recordDate = document.createElement('div');
+                recordDate.className = 'record-date';
+                recordDate.textContent = isCurrent ? '当前会话' : formatDate(new Date(record.time));
+                
+                const recordType = document.createElement('div');
+                recordType.className = 'record-type';
+                recordType.textContent = record.type === 'start' ? '开始' : 
+                                       record.type === 'end' ? '结束' : '记录点';
+                
+                recordHeader.appendChild(recordDate);
+                recordHeader.appendChild(recordType);
+                
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'record-time';
+                timeDiv.innerHTML = `<i class="far fa-clock"></i> 时间: ${record.displayTime}`;
+                
+                const intervalDiv = document.createElement('div');
+                intervalDiv.className = 'record-duration';
+                intervalDiv.innerHTML = `<i class="fas fa-hourglass-half"></i> 间隔: ${record.interval}`;
+                
+                li.appendChild(recordHeader);
+                li.appendChild(timeDiv);
+                li.appendChild(intervalDiv);
+                
+                // 添加备注区域
+                const noteDiv = document.createElement('div');
+                noteDiv.className = 'record-note';
+                
+                if (isCurrent) {
+                    // 当前会话显示输入框
+                    noteDiv.innerHTML = '<div>备注:</div>';
+                    const noteInput = document.createElement('input');
+                    noteInput.type = 'text';
+                    noteInput.className = 'note-input';
+                    noteInput.placeholder = '添加备注信息...';
+                    noteInput.value = record.note || '';
+                    
+                    noteInput.addEventListener('change', function() {
+                        record.note = this.value;
+                        saveNoteToHistory(this.value);
+                        saveSession();
+                    });
+                    
+                    noteInput.addEventListener('focus', function() {
+                        const historyContainer = noteDiv.querySelector('.note-history');
+                        if (historyContainer) {
+                            historyContainer.style.display = 'block';
+                        }
+                    });
+                    
+                    noteDiv.appendChild(noteInput);
+                    
+                    // 添加历史记录容器
+                    const historyContainer = document.createElement('div');
+                    historyContainer.className = 'note-history';
+                    
+                    // 添加历史记录项
+                    noteHistory.forEach(historyNote => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'note-history-item';
+                        historyItem.textContent = historyNote;
+                        historyItem.addEventListener('click', function() {
+                            noteInput.value = historyNote;
+                            record.note = historyNote;
+                            saveSession();
+                            historyContainer.style.display = 'none';
+                        });
+                        historyContainer.appendChild(historyItem);
+                    });
+                    
+                    noteDiv.appendChild(historyContainer);
+                } else {
+                    // 历史记录显示备注文本
+                    if (record.note) {
+                        noteDiv.innerHTML = `
+                            <div>备注:</div>
+                            <div class="note-display">${record.note}</div>
+                        `;
+                    }
+                }
+                
+                li.appendChild(noteDiv);
+                
+                return li;
+            }
+            
+            // 显示会话详情
+            function showSessionDetail(session) {
+                detailModal.style.display = 'flex';
+                
+                detailContent.innerHTML = `
+                    <div class="detail-item">
+                        <div class="detail-item-header">
+                            <div class="detail-item-time">${session.displayStart}</div>
+                            <div class="detail-item-type">会话开始</div>
+                        </div>
+                        <div class="detail-item-info">
+                            <div><i class="fas fa-heading"></i> 会话标题: <strong>${session.title || `会话 #${session.id.toString().slice(-4)}`}</strong></div>
+                            <div><i class="fas fa-fingerprint"></i> 会话ID: ${session.id}</div>
+                            <div><i class="far fa-calendar"></i> 日期: ${session.date}</div>
+                        </div>
+                    </div>
+                `;
+                
+                // 添加所有记录点
+                let prevTimestamp = session.startTimestamp;
+                
+                session.records.forEach((record, index) => {
+                    let interval = '';
+                    
+                    if (index > 0) {
+                        const duration = record.timestamp - prevTimestamp;
+                        interval = formatDuration(duration, true);
+                    }
+                    
+                    prevTimestamp = record.timestamp;
+                    
+                    const recordDiv = document.createElement('div');
+                    recordDiv.className = 'detail-item';
+                    
+                    recordDiv.innerHTML = `
+                        <div class="detail-item-header">
+                            <div class="detail-item-time">${record.displayTime}</div>
+                            <div class="detail-item-type">
+                                ${record.type === 'start' ? '开始' : 
+                                 record.type === 'end' ? '结束' : '记录点'}
+                            </div>
+                        </div>
+                        <div class="detail-item-info">
+                            ${index > 0 ? `<div class="detail-item-duration"><i class="fas fa-stopwatch"></i> 间隔: +${interval}</div>` : ''}
+                            <div><i class="far fa-calendar-alt"></i> ${formatFullDate(new Date(record.time))}</div>
+                            ${record.note ? `<div class="detail-item-note"><i class="fas fa-sticky-note"></i> 备注: ${record.note}</div>` : ''}
+                        </div>
+                    `;
+                    
+                    detailContent.appendChild(recordDiv);
+                });
+                
+                // 添加会话结束信息
+                if (session.endTime) {
+                    detailContent.innerHTML += `
+                        <div class="detail-item">
+                            <div class="detail-item-header">
+                                <div class="detail-item-time">${session.displayEnd}</div>
+                                <div class="detail-item-type">会话结束</div>
+                            </div>
+                            <div class="detail-item-info">
+                                <div class="detail-item-duration">
+                                    <i class="fas fa-hourglass-end"></i> 总时长: ${formatDuration(session.endTimestamp - session.startTimestamp)}
+                                </div>
+                                <div><i class="far fa-calendar-alt"></i> ${formatFullDate(new Date(session.endTime))}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // 更新统计数据
+            function updateStats() {
+                // 计算总会话数
+                let totalSessionCount = 0;
+                for (const date in sessions) {
+                    totalSessionCount += sessions[date].length;
+                }
+                totalSessions.textContent = totalSessionCount;
+                
+                // 计算今日记录数
+                let todayCount = 0;
+                if (sessions[todayStr]) {
+                    sessions[todayStr].forEach(session => {
+                        todayCount += session.records.length;
+                    });
+                }
+                
+                // 如果当前会话存在且是今天的，加上当前会话的记录数
+                if (currentSession && currentSession.date === todayStr) {
+                    todayCount += currentSession.records.length;
+                }
+                
+                todayRecords.textContent = todayCount;
+                
+                // 计算总记录数
+                let totalCount = 0;
+                for (const date in sessions) {
+                    sessions[date].forEach(session => {
+                        totalCount += session.records.length;
+                    });
+                }
+                
+                // 加上当前会话的记录数
+                if (currentSession) {
+                    totalCount += currentSession.records.length;
+                }
+                
+                totalRecords.textContent = totalCount;
+            }
+            
+            // 格式化日期 (YYYY-MM-DD)
+            function formatDate(date) {
+                const year = date.getFullYear();
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            // 格式化完整日期时间
+            function formatFullDate(date) {
+                return `${formatDate(date)} ${formatTime(date)}`;
+            }
+            
+            // 格式化时间显示
+            function formatTime(date) {
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                const seconds = date.getSeconds().toString().padStart(2, '0');
+                return `${hours}:${minutes}:${seconds}`;
+            }
+            
+            // 格式化时间间隔
+            function formatDuration(ms, compact = false) {
+                const totalSeconds = Math.floor(ms / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                
+                if (compact) {
+                    if (hours > 0) {
+                        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    } else {
+                        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                }
+                
+                if (hours > 0) {
+                    return `${hours}小时${minutes}分${seconds}秒`;
+                } else if (minutes > 0) {
+                    return `${minutes}分${seconds}秒`;
+                } else {
+                    return `${seconds}秒`;
+                }
+            }
+            
+            // PWA安装功能
+            function checkPWAInstallable() {
+                // 检查是否支持PWA安装
+                if ('BeforeInstallPromptEvent' in window) {
+                    // 监听安装提示事件
+                    window.addEventListener('beforeinstallprompt', (e) => {
+                        e.preventDefault();
+                        deferredPrompt = e;
+                        
+                        // 显示安装按钮
+                        pwaInstallButton.style.display = 'flex';
+                        installBanner.style.display = 'block';
+                        
+                        // 安装按钮事件
+                        pwaInstallButton.addEventListener('click', installPWA);
+                        installButton.addEventListener('click', installPWA);
+                    });
+                }
+                
+                // 检查是否已安装
+                window.addEventListener('appinstalled', () => {
+                    installBanner.style.display = 'none';
+                    pwaInstallButton.style.display = 'none';
+                });
+                
+                // 检查是否在独立模式运行（已安装）
+                if (window.matchMedia('(display-mode: standalone)').matches || 
+                    window.navigator.standalone) {
+                    installBanner.style.display = 'none';
+                    pwaInstallButton.style.display = 'none';
+                }
+            }
+            
+            // 安装PWA应用
+            function installPWA() {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('用户已安装应用');
+                        } else {
+                            console.log('用户拒绝了安装');
+                        }
+                        deferredPrompt = null;
+                    });
+                }
+            }
+            
+            // 关闭安装提示
+            dismissBanner.addEventListener('click', () => {
+                installBanner.style.display = 'none';
+            });
+            
+            // 新增：车牌管理功能
+            function updatePlatesDisplay() {
+                platesList.innerHTML = '';
+                
+                if (licensePlates.length === 0) {
+                    platesList.innerHTML = '<div class="no-records">暂无车牌记录</div>';
+                    return;
+                }
+                
+                licensePlates.forEach((plate, index) => {
+                    const plateItem = document.createElement('div');
+                    plateItem.className = 'plate-item';
+                    plateItem.innerHTML = `
+                        <div class="plate-number">${plate}</div>
+                        <div class="plate-actions">
+                            <button class="plate-edit-btn" data-index="${index}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="plate-delete-btn" data-index="${index}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    platesList.appendChild(plateItem);
+                });
+                
+                // 更新datalist选项
+                plateList.innerHTML = '';
+                licensePlates.forEach(plate => {
+                    const option = document.createElement('option');
+                    option.value = plate;
+                    plateList.appendChild(option);
+                });
+                
+                // 添加编辑和删除事件
+                document.querySelectorAll('.plate-edit-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = this.dataset.index;
+                        const newPlate = prompt('编辑车牌号:', licensePlates[index]);
+                        if (newPlate && newPlate.trim() !== '') {
+                            licensePlates[index] = newPlate.trim();
+                            localStorage.setItem('licensePlates', JSON.stringify(licensePlates));
+                            updatePlatesDisplay();
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.plate-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = this.dataset.index;
+                        if (confirm(`确定要删除车牌号 ${licensePlates[index]} 吗？`)) {
+                            licensePlates.splice(index, 1);
+                            localStorage.setItem('licensePlates', JSON.stringify(licensePlates));
+                            updatePlatesDisplay();
+                        }
+                    });
+                });
+            }
+            
+            // 添加车牌事件
+            addPlateBtn.addEventListener('click', function() {
+                const plate = plateInput.value.trim();
+                if (plate === '') {
+                    alert('请输入车牌号');
+                    return;
+                }
+                
+                if (licensePlates.includes(plate)) {
+                    alert('该车牌号已存在');
+                    return;
+                }
+                
+                licensePlates.push(plate);
+                localStorage.setItem('licensePlates', JSON.stringify(licensePlates));
+                plateInput.value = '';
+                updatePlatesDisplay();
+            });
+            
+            // 新增：里程计算事件
+            endMileageInput.addEventListener('input', calculateMileage);
+            startMileageInput.addEventListener('input', calculateMileage);
+            
+            // 新增：添加里程记录事件
+            addMileageBtn.addEventListener('click', addMileageRecord);
+            
+            // 初始化里程输入值
+            function initializeMileageInputs() {
+                // 从localStorage加载保存的输入值
+                const savedPlate = localStorage.getItem('mileagePlate');
+                const savedStart = localStorage.getItem('mileageStart');
+                const savedEnd = localStorage.getItem('mileageEnd');
+                
+                if (savedPlate) plateNumberInput.value = savedPlate;
+                if (savedStart) startMileageInput.value = savedStart;
+                if (savedEnd) endMileageInput.value = savedEnd;
+                
+                // 计算里程
+                calculateMileage();
+            }
+            
+            // 保存里程输入值到localStorage
+            function saveMileageInputs() {
+                localStorage.setItem('mileagePlate', plateNumberInput.value);
+                localStorage.setItem('mileageStart', startMileageInput.value);
+                localStorage.setItem('mileageEnd', endMileageInput.value);
+            }
+            
+            // 新增：里程记录区域折叠/展开事件
+            mileageHeader.addEventListener('click', function() {
+                mileageContainer.classList.toggle('collapsed');
+                mileageContainer.classList.toggle('expanded');
+                
+                // 如果展开时历史记录是显示的，确保区域足够
+                if (mileageContainer.classList.contains('expanded') && 
+                    mileageList.classList.contains('visible')) {
+                    mileageList.style.maxHeight = '200px';
+                }
+            });
+            
+            // 新增：历史记录切换功能
+            toggleHistoryBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                // 确保区域是展开的
+                if (mileageContainer.classList.contains('collapsed')) {
+                    mileageContainer.classList.remove('collapsed');
+                    mileageContainer.classList.add('expanded');
+                }
+                
+                const listVisible = mileageList.classList.toggle('visible');
+                this.innerHTML = listVisible ? 
+                    '<i class="fas fa-times"></i> 收起历史记录' : 
+                    '<i class="fas fa-history"></i> 查看历史记录';
+                
+                if (listVisible) {
+                    updateMileageDisplay();
+                    // 设置固定高度并允许滚动
+                    mileageList.style.maxHeight = '200px';
+                    mileageList.style.overflowY = 'auto';
+                }
+            });
+            
+            // 新增：计算行驶里程
+            function calculateMileage() {
+                const start = parseFloat(startMileageInput.value) || 0;
+                const end = parseFloat(endMileageInput.value) || 0;
+                
+                if (end >= start) {
+                    calculatedMileageInput.value = (end - start).toFixed(1);
+                } else {
+                    calculatedMileageInput.value = '';
+                }
+            }
+            
+            // 新增：添加里程记录
+            function addMileageRecord() {
+                const plate = plateNumberInput.value.trim();
+                const start = parseFloat(startMileageInput.value);
+                const end = parseFloat(endMileageInput.value);
+                const calculated = parseFloat(calculatedMileageInput.value);
+                
+                // 验证输入
+                if (!plate) {
+                    alert('请输入车牌号码');
+                    return;
+                }
+                
+                if (isNaN(start) || start < 0) {
+                    alert('请输入有效的开始里程');
+                    return;
+                }
+                
+                if (isNaN(end) || end < 0) {
+                    alert('请输入有效的结束里程');
+                    return;
+                }
+                
+                if (end < start) {
+                    alert('结束里程不能小于开始里程');
+                    return;
+                }
+                
+                // 创建记录对象
+                const now = new Date();
+                const record = {
+                    id: Date.now(),
+                    plateNumber: plate,
+                    startMileage: start,
+                    endMileage: end,
+                    mileage: calculated,
+                    date: formatDate(now),
+                    time: formatTime(now),
+                    timestamp: now.getTime()
+                };
+                
+                // 获取当前日期的记录数组
+                const currentDate = formatDate(now);
+                if (!mileageRecords[currentDate]) {
+                    mileageRecords[currentDate] = [];
+                }
+                
+                // 添加到当前日期的记录
+                mileageRecords[currentDate].push(record);
+                
+                // 保存到localStorage
+                localStorage.setItem('mileageRecords', JSON.stringify(mileageRecords));
+                
+                // 更新显示
+                updateMileageDisplay();
+                
+                // 清空表单
+                plateNumberInput.value = '';
+                startMileageInput.value = '';
+                endMileageInput.value = '';
+                calculatedMileageInput.value = '';
+                
+                // 保存输入值
+                saveMileageInputs();
+                
+                // 聚焦到车牌输入框
+                plateNumberInput.focus();
+                
+                // 显示添加成功消息
+                alert(`车牌号 ${plate} 的里程记录已添加成功！`);
+            }
+            
+            // 新增：更新里程记录显示
+            function updateMileageDisplay() {
+                // 清空列表
+                mileageList.innerHTML = '';
+                
+                // 获取当前日期的记录
+                const currentDate = selectedDate;
+                const records = mileageRecords[currentDate] || [];
+                
+                if (records.length === 0) {
+                    mileageList.innerHTML = '<div class="no-mileage">今日暂无里程记录</div>';
+                    return;
+                }
+                
+                // 显示记录（最新记录在最上面）
+                records.slice().reverse().forEach(record => {
+                    const item = document.createElement('div');
+                    item.className = 'mileage-item';
+                    
+                    item.innerHTML = `
+                        <div class="mileage-item-header">
+                            <div class="mileage-plate">${record.plateNumber}</div>
+                            <div class="mileage-time">${record.time}</div>
+                        </div>
+                        <div class="mileage-label">开始里程</div>
+                        <div class="mileage-value">${record.startMileage.toFixed(1)} km</div>
+                        <div class="mileage-label">结束里程</div>
+                        <div class="mileage-value">${record.endMileage.toFixed(1)} km</div>
+                        <div class="mileage-label">行驶里程</div>
+                        <div class="mileage-value" style="color: #27ae60; font-weight: bold;">${record.mileage.toFixed(1)} km</div>
+                    `;
+                    
+                    mileageList.appendChild(item);
+                });
+            }
+            
+            // 页面加载时初始化里程输入值
+            initializeMileageInputs();
+            
+            // 添加输入事件监听
+            plateNumberInput.addEventListener('input', saveMileageInputs);
+            startMileageInput.addEventListener('input', saveMileageInputs);
+            endMileageInput.addEventListener('input', saveMileageInputs);
+        });
+    </script>
+</body>
+</html>
